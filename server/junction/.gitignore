@@ -45,7 +45,5 @@ build/
 # Logs
 *.log
 
-# Secrets
-src/main/resources/application.properties
-.env
+
 

@@ -7,12 +7,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
 
 import com.friggalabs.junction.dto.UserDto;
+import com.friggalabs.junction.pojo.ResetPasswordRequest;
 import com.friggalabs.junction.pojo.UserLoginRequest;
 import com.friggalabs.junction.pojo.UserRegisterRequest;
 import com.friggalabs.junction.service.UserService;
 
+//@CrossOrigin(origins="http://localhost:5173/")
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -42,8 +45,14 @@ public class UserController {
 	}
 	
 	@GetMapping(path="/verify")
-	public String verifyEmail(@RequestParam String token) {
-		return userService.verifyUser(token);
+	public RedirectView  verifyEmail(@RequestParam String token) {
+		boolean isVerified = userService.verifyUser(token);
+
+	    String redirectUrl = isVerified
+	        ? "http://localhost:5173?verified=true"
+	        : "http://localhost:5173?verified=false";
+
+	    return new RedirectView(redirectUrl);
 	}
 	
 	@GetMapping(path="/")
@@ -57,8 +66,9 @@ public class UserController {
 	}
 	
 	@PostMapping(path="/reset-password")
-	public String resetPassword(@RequestParam String token, @RequestParam String newPassword) {
-		return userService.resetPassword(token, newPassword);
+	public String resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
+		System.out.println(resetPasswordRequest);
+		return userService.resetPassword(resetPasswordRequest.getToken(), resetPasswordRequest.getNewPassword());
 	}
 	
 }

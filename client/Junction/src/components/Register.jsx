@@ -23,7 +23,7 @@ const Register = ({ onClose }) => {
     if (!email || !password || !username || !fullName) return;
 
     try {
-      const response = await axios.post('http://localhost:8080/users/register', form);
+      const response = await axios.post('users/register', form);
       if (response.status === 200) setRegistered(true);
     } catch (err) {
       console.log(err);
@@ -42,6 +42,7 @@ const Register = ({ onClose }) => {
             <div className="flex flex-col items-center">
               <BsCheck2Circle className="w-24 h-24 text-green-600" />
               <p>Registered Successfully!</p>
+              <p>A verification link has been sent to your mail</p>
             </div>
           ) : (
             <form className="flex flex-col" onSubmit={handleSubmit}>

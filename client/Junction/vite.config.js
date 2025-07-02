@@ -8,6 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/users': 'http://localhost:8080',
+      '/documents': 'http://localhost:8080'
     },
   }
 })

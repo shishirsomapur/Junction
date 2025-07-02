@@ -1,24 +1,22 @@
-import React, { useState } from 'react';
-import Editor from './Editor';
+import { useSearchParams } from 'react-router-dom';
+import { useEffect } from 'react';
 
 function Home() {
-  const [content, setContent] = useState('');
 
-  const handleSubmit = () => {
-    console.log("Content:", content);
-  };
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const status = searchParams.get('verified');
+    if (status === 'true') {
+      alert("Email verified successfully! You can now log in.");
+    } else if (status === 'false') {
+      alert("Invalid or expired verification link.");
+    }
+  }, [searchParams]);
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Create a Post</h1>
-      <Editor value={content} onChange={setContent} />
-      <button
-        className="mt-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        onClick={handleSubmit}
-      >
-        Submit
-      </button>
-    </div>
+    <>
+    </>
   );
 }
 

@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-const Editor = () => {
-  const [content, setContent] = useState('');
-
+const Editor = ({ value, onChange }) => {
   const modules = {
     toolbar: [
-      [{ 'header': [1, 2, false] }],
+      [{ header: [1, 2, false] }],
       ['bold', 'italic', 'underline', 'strike'],
-      [{'list': 'ordered'}, {'list': 'bullet'}],
+      [{ list: 'ordered' }, { list: 'bullet' }],
       ['link', 'image'],
-      ['clean']
+      ['clean'],
     ],
   };
 
@@ -19,20 +17,20 @@ const Editor = () => {
     'header',
     'bold', 'italic', 'underline', 'strike',
     'list', 'bullet',
-    'link', 'image'
+    'link', 'image',
   ];
 
   return (
     <div style={{ width: '100%' }}>
       <ReactQuill
         theme="snow"
-        value={content}
-        onChange={setContent}
+        value={value}
+        onChange={onChange}
         modules={modules}
         formats={formats}
-        style={{ 
+        style={{
           height: '300px',
-          marginBottom: '50px' 
+          marginBottom: '50px',
         }}
       />
     </div>

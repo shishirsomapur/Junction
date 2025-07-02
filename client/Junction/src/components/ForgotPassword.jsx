@@ -25,11 +25,12 @@ const ForgotPassword = ({ onClose }) => {
     if (email === '') return;
 
     try {
-      const res = await axios.post('http://localhost:8080/users/reset-password', null, {
+      const res = await axios.post('users/forgot-password', null, {
         params: { email },
       });
       setResponseMsg(res.data);
     } catch (error) {
+      console.log(error)
       setResponseMsg(error.response?.data || 'Something went wrong');
     }
   };
@@ -60,7 +61,7 @@ const ForgotPassword = ({ onClose }) => {
             )}
             <button
               type="submit"
-              className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+              className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 cursor-pointer"
             >
               Send Reset Link
             </button>

@@ -53,13 +53,13 @@ public class UserService {
 
 	}
 
-	public String verifyUser(String token) {
+	public boolean verifyUser(String token) {
 		Optional<UserEntity> optionalUser = userDao.findByVerificationToken(token);
 
 		System.out.println("verifying user");
 
 		if (optionalUser.isEmpty()) {
-			return "Invalid Verfication Link";
+			return false;
 		}
 
 		UserEntity userEntity = optionalUser.get();
@@ -69,7 +69,7 @@ public class UserService {
 
 		userDao.save(userEntity);
 
-		return "Email verified successfully! You can now log in.";
+		return true;
 	}
 
 	public String login(UserLoginRequest userLoginRequest) {
@@ -98,8 +98,8 @@ public class UserService {
 		userEntity.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
 		userDao.save(userEntity);
 
-		String resetUrl = "http://localhost:3000/reset-password?token=" + token;
-		emailService.sendResetMail(email, "Reset your password", "Click the link to reset:" + resetUrl);
+		String resetUrl = "http://localhost:5173/reset-password?token=" + token;
+		emailService.sendResetMail(email, "Reset your password", "Click the link to reset your password:" + resetUrl);
 
 		return "Check your mail password reset link has been sent";
 	}
