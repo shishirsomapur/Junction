@@ -1,6 +1,7 @@
 package com.friggalabs.junction.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.friggalabs.junction.dao.UserDao;
 import com.friggalabs.junction.entity.UserEntity;
+import com.friggalabs.junction.exception.UserNotFoundException;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -23,7 +25,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 	@Override
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-		UserEntity userEntity = userDao.findByEmail(email);
+		Optional<UserEntity> userOptional = userDao.findByEmail(email);
+		
+		if(userOptional.isEmpty()) throw new UserNotFoundException("User not found with that email.");
+		
+		UserEntity userEntity = userOptional.get();
 		
 		System.out.println(userEntity);
 

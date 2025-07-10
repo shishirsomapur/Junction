@@ -1,8 +1,11 @@
 package com.friggalabs.junction.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,7 +17,11 @@ import org.springframework.stereotype.Service;
 
 import com.friggalabs.junction.dao.UserDao;
 import com.friggalabs.junction.dto.UserDto;
+import com.friggalabs.junction.dto.UserResponseDto;
 import com.friggalabs.junction.entity.UserEntity;
+import com.friggalabs.junction.exception.ServerErrorException;
+import com.friggalabs.junction.exception.UserAlreadyExistsException;
+import com.friggalabs.junction.exception.UserNotFoundException;
 import com.friggalabs.junction.pojo.UserLoginRequest;
 
 @Service
@@ -42,21 +49,30 @@ public class UserService {
 	}
 
 	public void register(UserDto userDto) {
+
 		UserEntity userEntity = mapper.map(userDto, UserEntity.class);
-		System.out.println(userEntity);
+
+		Optional<UserEntity> userOptional = userDao.findByEmail(userDto.getEmail());
+
+		if (userOptional.isEmpty())
+			throw new UserAlreadyExistsException("User already exists.");
+
 		userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
 		userEntity.setVerificationToken(UUID.randomUUID().toString());
 		userEntity.setEnabled(false);
-		userDao.save(userEntity);
+
+		UserEntity savedUser = userDao.save(userEntity);
+
+		if (savedUser == null)
+			throw new ServerErrorException("Internal server error.");
 
 		emailService.sendVerificationMail(userEntity.getEmail(), userEntity.getVerificationToken());
 
 	}
 
 	public boolean verifyUser(String token) {
-		Optional<UserEntity> optionalUser = userDao.findByVerificationToken(token);
 
-		System.out.println("verifying user");
+		Optional<UserEntity> optionalUser = userDao.findByVerificationToken(token);
 
 		if (optionalUser.isEmpty()) {
 			return false;
@@ -70,6 +86,7 @@ public class UserService {
 		userDao.save(userEntity);
 
 		return true;
+
 	}
 
 	public String login(UserLoginRequest userLoginRequest) {
@@ -79,8 +96,15 @@ public class UserService {
 
 		if (authentication.isAuthenticated()) {
 			token = jwtService.generateToken(userLoginRequest.getEmail());
-			UserEntity verifiedUser = userDao.findByEmail(userLoginRequest.getEmail());
+			Optional<UserEntity> userOptional = userDao.findByEmail(userLoginRequest.getEmail());
+
+			if (userOptional.isEmpty())
+				throw new UserNotFoundException("User not found");
+
+			UserEntity verifiedUser = userOptional.get();
+
 			return token + ":" + verifiedUser.getId();
+
 		}
 
 		return "Login Failed";
@@ -88,10 +112,13 @@ public class UserService {
 	}
 
 	public String sendResetLink(String email) {
-		UserEntity userEntity = userDao.findByEmail(email);
 
-		if (userEntity == null)
-			return "User not found with email";
+		Optional<UserEntity> userOptional = userDao.findByEmail(email);
+
+		if (userOptional.isEmpty())
+			throw new UserNotFoundException("User not found with that email.");
+
+		UserEntity userEntity = userOptional.get();
 
 		String token = UUID.randomUUID().toString();
 		userEntity.setResetToken(token);
@@ -102,26 +129,39 @@ public class UserService {
 		emailService.sendResetMail(email, "Reset your password", "Click the link to reset your password:" + resetUrl);
 
 		return "Check your mail password reset link has been sent";
+
 	}
 
 	public String resetPassword(String token, String newPassword) {
 		Optional<UserEntity> optionalUserEntity = userDao.findByResetToken(token);
-		
-		if(optionalUserEntity.isEmpty()) return "invalid token";
-		
+
+		if (optionalUserEntity.isEmpty())
+			return "invalid token";
+
 		UserEntity userEntity = optionalUserEntity.get();
-		
-		if(userEntity.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+
+		if (userEntity.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
 			return "Token expired. Please request a new one.";
 		}
-		
+
 		String hashedPassword = passwordEncoder.encode(newPassword);
 		userEntity.setPassword(hashedPassword);
 		userEntity.setResetToken(null);
 		userEntity.setResetTokenExpiry(null);
 		userDao.save(userEntity);
-		
+
 		return "Password has been reset successfully";
+	}
+
+	public List<UserResponseDto> getUsers() {
+
+		Stream<UserResponseDto> users = userDao.findAll().stream()
+				.map(userEntity -> new UserResponseDto(userEntity.getEmail()));
+
+		List<UserResponseDto> userEmails = users.collect(Collectors.toList());
+
+		return userEmails;
+
 	}
 
 }

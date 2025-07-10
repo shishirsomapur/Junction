@@ -14,7 +14,7 @@ public interface UserDao extends JpaRepository<UserEntity, Long>{
 
 	Optional<UserEntity> findByVerificationToken(String token);
 
-	UserEntity findByEmail(String email);
+	Optional<UserEntity> findByEmail(String email);
 
 	Optional<UserEntity> findByResetToken(String token);
 	
